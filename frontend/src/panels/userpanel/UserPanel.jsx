@@ -1,3 +1,258 @@
+// import React, { useEffect, useRef, useState } from "react";
+// import axios from "axios";
+
+// function UserPanel() {
+//   const [songs, setSongs] = useState([]);
+//   const [selectedAlbum, setSelectedAlbum] = useState(null);
+//   const [currentIndex, setCurrentIndex] = useState(0);
+//   const [isPlaying, setIsPlaying] = useState(false);
+//   const [currentTime, setCurrentTime] = useState(0);
+//   const [duration, setDuration] = useState(0);
+//   const [isShuffle, setIsShuffle] = useState(false);
+//   const [isRepeat, setIsRepeat] = useState(false);
+//   const [clickEffect, setClickEffect] = useState(null);
+
+//   const audioRef = useRef(null);
+
+//   useEffect(() => {
+//     axios.get("http://localhost:5000/api/")
+//       .then(res => setSongs(res.data));
+//   }, []);
+// console.log(songs);
+
+//   const albums = songs.reduce((acc, song) => {
+//     if (!acc[song.album]) acc[song.album] = [];
+//     acc[song.album].push(song);
+//     return acc;
+//   }, {});
+
+//   const albumNames = Object.keys(albums);
+//   const currentSongs = selectedAlbum ? albums[selectedAlbum] : [];
+//   const currentSong = currentSongs[currentIndex];
+
+//   const playSong = (index) => {
+//     setCurrentIndex(index);
+//     setIsPlaying(true);
+//   };
+
+//   const togglePlay = () => {
+//     if (!audioRef.current) return;
+//     isPlaying ? audioRef.current.pause() : audioRef.current.play();
+//     setIsPlaying(!isPlaying);
+//   };
+
+//   const nextSong = () => {
+//     if (!currentSongs.length) return;
+
+//     if (isShuffle) {
+//       const random = Math.floor(Math.random() * currentSongs.length);
+//       setCurrentIndex(random);
+//     } else {
+//       setCurrentIndex((prev) => (prev + 1) % currentSongs.length);
+//     }
+
+//     setIsPlaying(true);
+//   };
+
+//   const prevSong = () => {
+//     if (!currentSongs.length) return;
+//     setCurrentIndex((prev) =>
+//       (prev - 1 + currentSongs.length) % currentSongs.length
+//     );
+//     setIsPlaying(true);
+//   };
+
+//   const handleEnded = () => {
+//     if (isRepeat) {
+//       audioRef.current.currentTime = 0;
+//       audioRef.current.play();
+//     } else {
+//       nextSong();
+//     }
+//   };
+
+//   const handleSeek = (e) => {
+//     audioRef.current.currentTime = e.target.value;
+//     setCurrentTime(e.target.value);
+//   };
+
+//   const handleImageClick = (e) => {
+//     const rect = e.target.getBoundingClientRect();
+//     const clickX = e.clientX - rect.left;
+//     const half = rect.width / 2;
+
+//     if (clickX < half) {
+//       audioRef.current.currentTime = Math.max(
+//         0,
+//         audioRef.current.currentTime - 10
+//       );
+//       setClickEffect("-10s");
+//     } else {
+//       audioRef.current.currentTime = Math.min(
+//         duration,
+//         audioRef.current.currentTime + 10
+//       );
+//       setClickEffect("+10s");
+//     }
+
+//     setTimeout(() => setClickEffect(null), 800);
+//   };
+
+//   const formatTime = (time) => {
+//     if (!time) return "0:00";
+//     const m = Math.floor(time / 60);
+//     const s = Math.floor(time % 60);
+//     return `${m}:${s < 10 ? "0" : ""}${s}`;
+//   };
+
+//   useEffect(() => {
+//     if (audioRef.current && isPlaying) {
+//       audioRef.current.play();
+//     }
+//   }, [currentIndex]);
+
+//   return (
+//     <div style={styles.app}>
+//       <div style={styles.header}>
+//         {/* <h1>PinkWave Music</h1> */}
+//       </div>
+
+//       {!selectedAlbum && (
+//         <div style={styles.albumGrid}>
+//           {albumNames.map((album) => (
+//             <div
+//               key={album}
+//               style={styles.albumCard}
+//               onClick={() => {
+//                 setSelectedAlbum(album);
+//                 setCurrentIndex(0);
+//               }}
+//             >
+//               <h3>{album}</h3>
+//               <p>{albums[album].length} Tracks</p>
+//             </div>
+//           ))}
+//         </div>
+//       )}
+
+//       {selectedAlbum && (
+//         <div style={styles.content}>
+//           <button
+//             style={styles.backButton}
+//             onClick={() => setSelectedAlbum(null)}
+//           >
+//             ← Back
+//           </button>
+
+//           <div style={styles.mainSection}>
+//             <div style={styles.songList}>
+//               {currentSongs.map((song, index) => (
+//                 <div
+//                   key={song._id}
+//                   style={{
+//                     ...styles.songItem,
+//                     background:
+//                       index === currentIndex
+//                         ? "rgba(255,105,180,0.15)"
+//                         : "transparent",
+//                   }}
+//                   onClick={() => playSong(index)}
+//                 >
+//                   <span>{song.title}</span>
+//                   <span style={{ opacity: 0.6 }}>{song.artist}</span>
+//                 </div>
+//               ))}
+//             </div>
+
+//             {currentSong && (
+//               <div style={styles.player}>
+//                 <div style={styles.imageWrapper}>
+//                   <img
+//                     src={`http://localhost:5000/uploads/images/${currentSong.imageUrl}`}
+//                     alt=""
+//                     style={styles.image}
+//                     onClick={handleImageClick}
+//                   />
+//                   {clickEffect && (
+//                     <div style={styles.clickIndicator}>
+//                       {clickEffect}
+//                     </div>
+//                   )}
+//                 </div>
+
+//                 <h2>{currentSong.title}</h2>
+//                 <p style={{ opacity: 0.6 }}>{currentSong.artist}</p>
+
+//                 <audio
+//                   ref={audioRef}
+//                   src={`http://localhost:5000/uploads/audio/${currentSong.audioUrl}`}
+//                   onTimeUpdate={() =>
+//                     setCurrentTime(audioRef.current.currentTime)
+//                   }
+//                   onLoadedMetadata={() =>
+//                     setDuration(audioRef.current.duration)
+//                   }
+//                   onEnded={handleEnded}
+//                 />
+
+//                 {/* Progress */}
+//                 <div style={styles.progressWrapper}>
+//                   <span>{formatTime(currentTime)}</span>
+//                   <input
+//                     type="range"
+//                     min="0"
+//                     max={duration || 0}
+//                     value={currentTime}
+//                     onChange={handleSeek}
+//                     style={styles.range}
+//                   />
+//                   <span>{formatTime(duration)}</span>
+//                 </div>
+
+//                 {/* Controls */}
+//                 <div style={styles.controls}>
+//                   <button style={styles.controlBtn} onClick={prevSong}>
+//                     ⏮
+//                   </button>
+
+//                   <button style={styles.playBtn} onClick={togglePlay}>
+//                     {isPlaying ? "Pause" : "Play"}
+//                   </button>
+
+//                   <button style={styles.controlBtn} onClick={nextSong}>
+//                     ⏭
+//                   </button>
+//                 </div>
+
+//                 <div style={styles.extraControls}>
+//                   <button
+//                     style={{
+//                       ...styles.smallBtn,
+//                       background: isShuffle ? "#ff7eb9" : "#ffd6e7",
+//                     }}
+//                     onClick={() => setIsShuffle(!isShuffle)}
+//                   >
+//                     Shuffle
+//                   </button>
+
+//                   <button
+//                     style={{
+//                       ...styles.smallBtn,
+//                       background: isRepeat ? "#ff7eb9" : "#ffd6e7",
+//                     }}
+//                     onClick={() => setIsRepeat(!isRepeat)}
+//                   >
+//                     Repeat
+//                   </button>
+//                 </div>
+//               </div>
+//             )}
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
 import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 
@@ -14,11 +269,13 @@ function UserPanel() {
 
   const audioRef = useRef(null);
 
+  // ✅ Fetch songs
   useEffect(() => {
-    axios.get("http://localhost:5000/api/")
-      .then(res => setSongs(res.data));
+    axios
+      .get("https://music-vivid.onrender.com/api")
+      .then((res) => setSongs(res.data))
+      .catch((err) => console.log("Fetch error:", err));
   }, []);
-console.log(songs);
 
   const albums = songs.reduce((acc, song) => {
     if (!acc[song.album]) acc[song.album] = [];
@@ -56,8 +313,8 @@ console.log(songs);
 
   const prevSong = () => {
     if (!currentSongs.length) return;
-    setCurrentIndex((prev) =>
-      (prev - 1 + currentSongs.length) % currentSongs.length
+    setCurrentIndex(
+      (prev) => (prev - 1 + currentSongs.length) % currentSongs.length
     );
     setIsPlaying(true);
   };
@@ -72,11 +329,14 @@ console.log(songs);
   };
 
   const handleSeek = (e) => {
+    if (!audioRef.current) return;
     audioRef.current.currentTime = e.target.value;
     setCurrentTime(e.target.value);
   };
 
   const handleImageClick = (e) => {
+    if (!audioRef.current) return;
+
     const rect = e.target.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     const half = rect.width / 2;
@@ -107,15 +367,13 @@ console.log(songs);
 
   useEffect(() => {
     if (audioRef.current && isPlaying) {
-      audioRef.current.play();
+      audioRef.current.play().catch(() => {});
     }
   }, [currentIndex]);
 
   return (
     <div style={styles.app}>
-      <div style={styles.header}>
-        {/* <h1>PinkWave Music</h1> */}
-      </div>
+      <div style={styles.header}></div>
 
       {!selectedAlbum && (
         <div style={styles.albumGrid}>
@@ -167,9 +425,10 @@ console.log(songs);
             {currentSong && (
               <div style={styles.player}>
                 <div style={styles.imageWrapper}>
+                  {/* ✅ Cloudinary image */}
                   <img
-                    src={`http://localhost:5000/uploads/images/${currentSong.imageUrl}`}
-                    alt=""
+                    src={currentSong.imageUrl}
+                    alt={currentSong.title}
                     style={styles.image}
                     onClick={handleImageClick}
                   />
@@ -183,19 +442,19 @@ console.log(songs);
                 <h2>{currentSong.title}</h2>
                 <p style={{ opacity: 0.6 }}>{currentSong.artist}</p>
 
+                {/* ✅ Cloudinary audio */}
                 <audio
                   ref={audioRef}
-                  src={`http://localhost:5000/uploads/audio/${currentSong.audioUrl}`}
+                  src={currentSong.audioUrl}
                   onTimeUpdate={() =>
-                    setCurrentTime(audioRef.current.currentTime)
+                    setCurrentTime(audioRef.current?.currentTime || 0)
                   }
                   onLoadedMetadata={() =>
-                    setDuration(audioRef.current.duration)
+                    setDuration(audioRef.current?.duration || 0)
                   }
                   onEnded={handleEnded}
                 />
 
-                {/* Progress */}
                 <div style={styles.progressWrapper}>
                   <span>{formatTime(currentTime)}</span>
                   <input
@@ -209,7 +468,6 @@ console.log(songs);
                   <span>{formatTime(duration)}</span>
                 </div>
 
-                {/* Controls */}
                 <div style={styles.controls}>
                   <button style={styles.controlBtn} onClick={prevSong}>
                     ⏮
@@ -253,7 +511,6 @@ console.log(songs);
     </div>
   );
 }
-
 const styles = {
   app: {
     width: "98vw",
@@ -373,5 +630,9 @@ const styles = {
     cursor: "pointer",
   },
 };
+
+// export default UserPanel;
+
+// const styles = { /* keep your styles same */ };
 
 export default UserPanel;

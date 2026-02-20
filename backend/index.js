@@ -1,3 +1,42 @@
+// import express from "express";
+// import mongoose from "mongoose";
+// import cors from "cors";
+// import dotenv from "dotenv";
+// import songRoutes from "./routes/songRoutes.js";
+
+// dotenv.config();
+
+// const app = express();
+// app.get("/test", (req, res) => {
+//   res.send("Backend working");
+// });
+
+// // ✅ CORS must be first
+// app.use(
+//   cors({
+//     origin: "http://localhost:5173",
+//     methods: ["GET", "POST", "PUT", "DELETE"],
+//     credentials: true,
+//   })
+// );
+
+// // ✅ Body parsers
+// app.use(express.json());
+// app.use(express.urlencoded({ extended: true }));
+
+// // ✅ Serve uploaded files
+// app.use("/uploads", express.static("uploads"));
+
+// // ✅ Routes
+// app.use("/api", songRoutes);
+
+// // ✅ MongoDB
+// mongoose
+//   .connect(process.env.MONGO_URI)
+//   .then(() => console.log("MongoDB connected"))
+//   .catch((err) => console.log(err));
+
+// app.listen(5000, () => console.log("Server running on port 5000"));
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
@@ -7,33 +46,40 @@ import songRoutes from "./routes/songRoutes.js";
 dotenv.config();
 
 const app = express();
-app.get("/test", (req, res) => {
-  res.send("Backend working");
+
+/* 🔥 Test route */
+app.get("/", (req, res) => {
+  res.send("PinkWave backend running");
 });
 
-// ✅ CORS must be first
+/* 🔥 CORS for local + Vercel */
 app.use(
   cors({
-    origin: "http://localhost:5174",
+    origin: [
+      "http://localhost:5173",
+      "https://music-vivid-6.vercel.app/",
+    ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
 );
 
-// ✅ Body parsers
+/* 🔥 Body parser */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ Serve uploaded files
-app.use("/uploads", express.static("uploads"));
-
-// ✅ Routes
+/* 🔥 Routes */
 app.use("/api", songRoutes);
 
-// ✅ MongoDB
+/* 🔥 MongoDB */
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.log(err));
 
-app.listen(5000, () => console.log("Server running on port 5000"));
+/* 🔥 Dynamic port for Render */
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () =>
+  console.log(`Server running on port ${PORT}`)
+);
